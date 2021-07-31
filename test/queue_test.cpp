@@ -6,6 +6,7 @@
 //
 #include <gtest/gtest.h>
 
+#include <thread>
 #include <queue.hpp>
 
 
@@ -51,13 +52,40 @@ TEST(QueueTest, TestNewQueueFull)
     EXPECT_TRUE( q.full() );
 }
 
-TEST(QueueTest, TestNewQueueIsBlockedWhenPopEmpty)
+TEST(QueueTest, TestTwoThreadsInsertingAndPopping)
 {
-
-}
-
-TEST(QueueTest, TestNewQueueIsBlockedWhenFull)
-{
+    Queue<int> q(3);
     
-}
+    auto pusherFunctor = [](Queue<int>& q)
+    {
+        q.push(1);
+        q.push(2);
+        q.push(3);
+        
+        EXPECT_TRUE(q.full() );
+        q.push(4);
+    };
 
+    auto poperFunctor = [](Queue<int>& q)
+    {
+        int el = q.pop();
+        EXPECT_EQ(el, 1);
+        
+        el = q.pop();
+        EXPECT_EQ(el, 2);
+        
+        el = q.pop();
+        EXPECT_EQ(el, 3);
+        
+        el = q.pop();
+        EXPECT_EQ(el, 4);
+    };
+    
+    std::thread t1( pusherFunctor, std::ref(q) );
+    std::thread t2( poperFunctor, std::ref(q) );
+    
+    t1.join();
+    t2.join();
+    
+    EXPECT_TRUE(q.empty());
+}
