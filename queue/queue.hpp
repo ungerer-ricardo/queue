@@ -11,21 +11,19 @@
 #include <queue>
 #include <mutex>
 
-template<class T>
+template<class Element_t>
 class Queue
 {
 public:
     
-    Queue ( const size_t max_queue_size ) :
+    Queue ( const size_t& max_queue_size ) :
         max_queue_size(max_queue_size)
-    {
-    }
+    {}
     
     virtual ~Queue()
-    {
-    }
+    {}
     
-    void push (const T& element )
+    void push (const Element_t& element )
     {
         std::unique_lock<std::mutex> lock ( queue_mutex );
         
@@ -39,7 +37,7 @@ public:
         pop_condition.notify_one();
     }
     
-    T pop()
+    Element_t pop()
     {
         std::unique_lock<std::mutex> lock( queue_mutex );
     
@@ -48,7 +46,8 @@ public:
             pop_condition.wait(lock);
         }
         
-        T ret_val = queue.pop();
+        Element_t ret_val = queue.front();
+        queue.pop();
         
         push_condition.notify_one();
         
@@ -77,7 +76,7 @@ public:
     
 private:
 
-    std::queue<T> queue;
+    std::queue<Element_t> queue;
     const size_t max_queue_size;
 
     std::mutex queue_mutex;
