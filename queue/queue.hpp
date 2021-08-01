@@ -10,46 +10,60 @@
 
 #include <queue>
 #include <mutex>
+#include <chrono>
+#include <limits>
+
+typedef std::chrono::milliseconds millisecs;
 
 template<class Element_t>
 class Queue
 {
 public:
     
-    Queue ( const size_t& max_queue_size ) :
-        max_queue_size(max_queue_size)
+    Queue ( const size_t& max_queue_size, 
+            const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
+        max_queue_size(max_queue_size),
+        timeout_in_milli( timeout_in_milli )
     {}
     
     virtual ~Queue()
     {}
     
-    void push (const Element_t& element )
+    bool push (const Element_t& element )
     {
         std::unique_lock<std::mutex> lock ( queue_mutex );
         
-        while ( full() )
+        bool ret_val = true;
+        if ( full() && 
+             push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout )
         {
-            push_condition.wait(lock);
+            ret_val = false;
+        }
+        else
+        {
+            queue.push(element);
+            pop_condition.notify_one();
         }
         
-        queue.push(element);
-        
-        pop_condition.notify_one();
+        return ret_val;
     }
     
-    Element_t pop()
+    bool pop( Element_t& popped_val )
     {
         std::unique_lock<std::mutex> lock( queue_mutex );
     
-        while ( empty() )
+        bool ret_val = true;
+        if ( empty() && 
+             pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout ) 
         {
-            pop_condition.wait(lock);
+            ret_val = false;
         }
-        
-        Element_t ret_val = queue.front();
-        queue.pop();
-        
-        push_condition.notify_one();
+        else 
+        {
+            popped_val = queue.front();
+            queue.pop();
+            push_condition.notify_one();
+        }
         
         return ret_val;
     }
@@ -59,7 +73,7 @@ public:
         return this->queue.count();
     }
     
-    size_t size() const
+    size_t max_size() const
     {
         return this->max_queue_size;
     }
@@ -78,6 +92,8 @@ private:
 
     std::queue<Element_t> queue;
     const size_t max_queue_size;
+
+    const unsigned timeout_in_milli;
 
     std::mutex queue_mutex;
     std::condition_variable push_condition;
