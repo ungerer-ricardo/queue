@@ -20,52 +20,78 @@ class Queue
 {
 public:
     
+    typedef enum {
+        ST_RUNNING,
+        ST_CLOSING
+    } QueueState;
+
     Queue ( const size_t& max_queue_size, 
             const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
         max_queue_size(max_queue_size),
-        timeout_in_milli( timeout_in_milli )
+        timeout_in_milli( timeout_in_milli ),
+        my_state(ST_RUNNING)
     {}
     
     virtual ~Queue()
-    {}
+    {
+        std::unique_lock<std::mutex> lock( queue_mutex );
+
+        my_state = ST_CLOSING;
+
+        push_condition.notify_all();
+        pop_condition.notify_all();
+    }
     
     bool push (const Element_t& element )
     {
+        if ( my_state != ST_RUNNING ) 
+        {
+            return false;
+        }
+
         std::unique_lock<std::mutex> lock ( queue_mutex );
-        
-        bool ret_val = true;
+
         if ( full() && 
              push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout )
         {
-            ret_val = false;
+            return false;
         }
-        else
+
+        //Rechecking as the queue could have been closed while waiting
+        if (my_state!=ST_RUNNING) 
         {
-            queue.push(element);
-            pop_condition.notify_one();
+            return false;
         }
         
-        return ret_val;
+        queue.push(element);
+        pop_condition.notify_one();
+        return true;
     }
     
     bool pop( Element_t& popped_val )
     {
+        if( my_state != ST_RUNNING )
+        {
+            return false;
+        }
+
         std::unique_lock<std::mutex> lock( queue_mutex );
     
-        bool ret_val = true;
         if ( empty() && 
              pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout ) 
         {
-            ret_val = false;
+            return false;
         }
-        else 
+
+        if (my_state!=ST_RUNNING)
         {
-            popped_val = queue.front();
-            queue.pop();
-            push_condition.notify_one();
+            return false;
         }
-        
-        return ret_val;
+
+        popped_val = queue.front();
+        queue.pop();
+        push_condition.notify_one();
+        return true;
     }
     
     size_t count() const
@@ -94,6 +120,8 @@ private:
     const size_t max_queue_size;
 
     const unsigned timeout_in_milli;
+
+    QueueState my_state;
 
     std::mutex queue_mutex;
     std::condition_variable push_condition;
