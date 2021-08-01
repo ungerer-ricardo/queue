@@ -3,9 +3,9 @@ project(bosh_queue)
 
 set (CMAKE_CXX_STANDARD 17)
 
-include_directories(queue)
+include_directories(queue cpp11logger)
 
 add_subdirectory(test)
 
-add_executable(bosh_queue prog/main.cpp)
+add_executable(bosh_queue prog/main.cpp cpp11logger/logger.cpp)
 
