@@ -64,8 +64,6 @@ TEST(QueueTest, TestTwoThreadsInsertingAndPopping)
         EXPECT_TRUE( q.push(1) );
         EXPECT_TRUE( q.push(2) );
         EXPECT_TRUE( q.push(3) );
-        
-        EXPECT_TRUE( q.full() );
         EXPECT_TRUE( q.push(4) );
     };
 
@@ -111,3 +109,18 @@ TEST( QueueTest, TestTimeoutFullQueue )
     EXPECT_FALSE( q.push(1) );
 }
 
+TEST( QueueTest, TestClosingState ) 
+{
+    Queue<int>* q = new Queue<int>(3);
+
+    auto callingPopWhileDestroyingFunctor = [](Queue<int>* q)
+    {
+        int el;
+        EXPECT_FALSE( q->pop( el) );
+    };
+
+    std::thread t1( callingPopWhileDestroyingFunctor, q );
+    delete q;
+
+    t1.join();
+}
