@@ -1,4 +1,4 @@
-add_executable( queue_test queue_test.cpp )
+add_executable( queue_test blocking_queue_test.cpp )
 
 
 add_test(NAME queue_test COMMAND queue_test)
