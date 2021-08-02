@@ -7,12 +7,12 @@
 #include <gtest/gtest.h>
 
 #include <thread>
-#include <queue.hpp>
+#include <blocking_queue.hpp>
 
 
 TEST(QueueTest, TestNewQueueEmpty)
 {
-    Queue<int> q(3);
+    BlockingQueue<int> q(3);
     int el = 0;
 
     EXPECT_TRUE( q.empty() );
@@ -28,7 +28,7 @@ TEST(QueueTest, TestNewQueueEmpty)
 
 TEST(QueueTest, TestFIFO)
 {
-    Queue<int> q(3);
+    BlockingQueue<int> q(3);
     int el = 0;
 
     EXPECT_TRUE( q.push(1) );
@@ -48,7 +48,7 @@ TEST(QueueTest, TestFIFO)
 
 TEST(QueueTest, TestNewQueueFull)
 {
-    Queue<int> q(1);
+    BlockingQueue<int> q(1);
     EXPECT_FALSE( q.full() );
     
     EXPECT_TRUE( q.push( 1 ) );
@@ -57,9 +57,9 @@ TEST(QueueTest, TestNewQueueFull)
 
 TEST(QueueTest, TestTwoThreadsInsertingAndPopping)
 {
-    Queue<int> q(3);
+    BlockingQueue<int> q(3);
     
-    auto pusherFunctor = [](Queue<int>& q)
+    auto pusherFunctor = [](BlockingQueue<int>& q)
     {
         EXPECT_TRUE( q.push(1) );
         EXPECT_TRUE( q.push(2) );
@@ -67,7 +67,7 @@ TEST(QueueTest, TestTwoThreadsInsertingAndPopping)
         EXPECT_TRUE( q.push(4) );
     };
 
-    auto poperFunctor = [](Queue<int>& q)
+    auto poperFunctor = [](BlockingQueue<int>& q)
     {
         int el;
 
@@ -95,7 +95,7 @@ TEST(QueueTest, TestTwoThreadsInsertingAndPopping)
 
 TEST(QueueTest, TestTimeoutEmptyQueue )
 {
-    Queue<int> q(3,100);
+    BlockingQueue<int> q(3,100);
     int el;
 
     EXPECT_FALSE( q.pop( el ) );
@@ -103,7 +103,7 @@ TEST(QueueTest, TestTimeoutEmptyQueue )
 
 TEST( QueueTest, TestTimeoutFullQueue )
 {
-    Queue<int>  q(1, 100);
+    BlockingQueue<int>  q(1, 100);
 
     EXPECT_TRUE( q.push(1) );
     EXPECT_FALSE( q.push(1) );
@@ -111,9 +111,9 @@ TEST( QueueTest, TestTimeoutFullQueue )
 
 TEST( QueueTest, TestClosingState ) 
 {
-    Queue<int>* q = new Queue<int>(3);
+    BlockingQueue<int>* q = new BlockingQueue<int>(3);
 
-    auto callingPopWhileDestroyingFunctor = [](Queue<int>* q)
+    auto callingPopWhileDestroyingFunctor = [](BlockingQueue<int>* q)
     {
         int el;
         EXPECT_FALSE( q->pop( el) );

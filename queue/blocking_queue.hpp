@@ -15,8 +15,11 @@
 
 typedef std::chrono::milliseconds millisecs;
 
-template<class Element_t>
-class Queue
+template<class Element_t, 
+         class Queue_t = std::queue<Element_t>, 
+         class Mutex_t = std::mutex,
+         class CondVar_t = std::condition_variable>
+class BlockingQueue
 {
 public:
     
@@ -25,16 +28,16 @@ public:
         ST_CLOSING
     } QueueState;
 
-    Queue ( const size_t& max_queue_size, 
+    BlockingQueue ( const size_t& max_queue_size, 
             const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
         max_queue_size(max_queue_size),
         timeout_in_milli( timeout_in_milli ),
         my_state(ST_RUNNING)
     {}
     
-    virtual ~Queue()
+    virtual ~BlockingQueue()
     {
-        std::unique_lock<std::mutex> lock( queue_mutex );
+        std::unique_lock<Mutex_t> lock( queue_mutex );
 
         my_state = ST_CLOSING;
 
@@ -49,7 +52,7 @@ public:
             return false;
         }
 
-        std::unique_lock<std::mutex> lock ( queue_mutex );
+        std::unique_lock<Mutex_t> lock ( queue_mutex );
 
         if ( full() && 
              push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout )
@@ -75,7 +78,7 @@ public:
             return false;
         }
 
-        std::unique_lock<std::mutex> lock( queue_mutex );
+        std::unique_lock<Mutex_t> lock( queue_mutex );
     
         if ( empty() && 
              pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout ) 
@@ -116,16 +119,16 @@ public:
     
 private:
 
-    std::queue<Element_t> queue;
+    Queue_t queue;
     const size_t max_queue_size;
 
     const unsigned timeout_in_milli;
 
     QueueState my_state;
 
-    std::mutex queue_mutex;
-    std::condition_variable push_condition;
-    std::condition_variable pop_condition;
+    Mutex_t queue_mutex;
+    CondVar_t push_condition;
+    CondVar_t pop_condition;
 };
 
 #endif /* queue_hpp */

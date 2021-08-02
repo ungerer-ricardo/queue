@@ -11,11 +11,11 @@
 
 #include <logger.h>
 
-#include "queue.hpp"
+#include "blocking_queue.hpp"
 
 logger::ConsoleLogger global_logger;
 
-void producer_func( Queue<int>& q )
+void producer_func( BlockingQueue<int>& q )
 {
 	for ( int i = 0; i < 10000; i++ ) {
 		if (! q.push( i ) ) {
@@ -27,7 +27,7 @@ void producer_func( Queue<int>& q )
 	}
 }
 
-void consumer_func( Queue<int>& q )
+void consumer_func( BlockingQueue<int>& q )
 {
 	for ( int i = 0; i < 20000; i++ ) {
 		int front; 
@@ -45,7 +45,7 @@ void consumer_func( Queue<int>& q )
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    Queue<int> q(100, 1000);
+    BlockingQueue<int> q(100, 1000);
 
     std::thread producer1( producer_func, std::ref(q));
     std::thread producer2( producer_func, std::ref(q));
