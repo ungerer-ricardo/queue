@@ -2,6 +2,9 @@
 
 #include <gtest/gtest.h>
 
+#include <logger.h>
+
+logger::ConsoleLogger global_logger;
 
 TEST(CircularBufferQueueTest, pushOnEmptyQueueUntilFull)
 {
@@ -81,4 +84,42 @@ TEST(CircularBufferQueueTest, NoSizedQueue)
 
     int el;
     EXPECT_FALSE( q.pop(el));
+}
+
+TEST(CircularBufferQueueTest, QueueSize)
+{
+    CircularBufferQueue<int> q(3);
+
+    int el;
+    
+    EXPECT_EQ(q.size(),0);
+
+    q.push(1);
+    EXPECT_EQ(q.size(), 1);
+
+    q.push(2);
+    EXPECT_EQ(q.size(), 2);
+
+    q.push(3);
+    EXPECT_EQ(q.size(), 3);
+
+    q.pop(el);
+    EXPECT_EQ(q.size(),2);
+
+    q.push(4);
+    EXPECT_EQ(q.size(),3);
+
+    q.pop(el);
+    EXPECT_EQ(q.size(),2);
+
+    q.push(5);
+    EXPECT_EQ(q.size(),3);
+
+    q.pop(el);
+    EXPECT_EQ(q.size(),2);
+
+    q.push(5);
+    EXPECT_EQ(q.size(),3);
+
+
 }
