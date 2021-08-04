@@ -13,10 +13,16 @@
 #include <chrono>
 #include <limits>
 
+#include <logger.h>
+
+#include "circular_buffer_queue.hpp"
+
+extern logger::ConsoleLogger global_logger;
+
 typedef std::chrono::milliseconds millisecs;
 
 template<class Element_t, 
-         class Queue_t = std::queue<Element_t>, 
+         class Queue_t = CircularBufferQueue<Element_t>, 
          class Mutex_t = std::mutex,
          class CondVar_t = std::condition_variable>
 class BlockingQueue
@@ -29,8 +35,8 @@ public:
     } QueueState;
 
     BlockingQueue ( const size_t& max_queue_size, 
-            const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
-        max_queue_size(max_queue_size),
+                    const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
+        queue(max_queue_size),
         timeout_in_milli( timeout_in_milli ),
         my_state(ST_RUNNING)
     {}
@@ -63,6 +69,7 @@ public:
         //Rechecking as the queue could have been closed while waiting
         if (my_state!=ST_RUNNING) 
         {
+            global_logger() << "trying to push on a closed queue";
             return false;
         }
         
@@ -91,8 +98,7 @@ public:
             return false;
         }
 
-        popped_val = queue.front();
-        queue.pop();
+        queue.pop( popped_val);
         push_condition.notify_one();
         return true;
     }
@@ -104,7 +110,7 @@ public:
     
     size_t max_size() const
     {
-        return this->max_queue_size;
+        return queue.max_size();
     }
     
     bool empty() const
@@ -114,14 +120,12 @@ public:
     
     bool full() const
     {
-        return queue.size() >= max_queue_size;
+        return queue.size() >= queue.max_size();
     }
     
 private:
 
     Queue_t queue;
-    const size_t max_queue_size;
-
     const unsigned timeout_in_milli;
 
     QueueState my_state;
