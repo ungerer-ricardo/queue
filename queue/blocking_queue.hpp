@@ -60,10 +60,13 @@ public:
 
         std::unique_lock<Mutex_t> lock ( queue_mutex );
 
-        if ( full() && 
-             push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout )
+        while ( full() )
         {
-            return false;
+            if (push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout)
+            {
+                global_logger() << "push timeout on element " << element;
+                return false;
+            }
         }
 
         //Rechecking as the queue could have been closed while waiting
@@ -72,8 +75,8 @@ public:
             global_logger() << "trying to push on a closed queue";
             return false;
         }
-        
-        queue.push(element);
+
+        queue.push(element);        
         pop_condition.notify_one();
         return true;
     }
@@ -87,10 +90,13 @@ public:
 
         std::unique_lock<Mutex_t> lock( queue_mutex );
     
-        if ( empty() && 
-             pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout ) 
+        while ( empty() ) 
         {
-            return false;
+            if ( pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout )
+            {
+                global_logger() << "pop timeout.";
+                return false;
+            }
         }
 
         if (my_state!=ST_RUNNING)
@@ -101,11 +107,6 @@ public:
         queue.pop( popped_val);
         push_condition.notify_one();
         return true;
-    }
-    
-    size_t count() const
-    {
-        return this->queue.count();
     }
     
     size_t max_size() const
