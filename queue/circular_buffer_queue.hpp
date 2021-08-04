@@ -13,9 +13,12 @@ class CircularBufferQueue
 {
 public:
 
+    typedef Element_t* iterator;
+
     CircularBufferQueue( const size_t& max_element_count ) :
         circular_buffer( new Element_t[max_element_count+1]),
-        max_element_count(max_element_count)
+        max_element_count(max_element_count),
+        current_element_count(0)
     {
         front_it = circular_buffer;
         back_it = circular_buffer;
@@ -31,10 +34,12 @@ public:
     {
         if (size() >= max_element_count)
         {
+            global_logger() << "pushing on a full list." << new_element;
             return false;
         }   
 
         *back_it = new_element;
+        ++current_element_count;
         forwardIterator(back_it);
 
         return true;
@@ -42,12 +47,14 @@ public:
 
     bool pop( Element_t& popped_element )
     {
-        if(size() == 0)
+        if(empty())
         {
+            global_logger() << "popping an empty list";
             return false;
         }
+        
         popped_element = front();
-
+        --current_element_count;
         forwardIterator(front_it);
 
         return true;
@@ -60,19 +67,7 @@ public:
 
     size_t size() const
     {
-        size_t ret_val = 0;
-
-        if ( back_it < front_it )
-        {
-//          ret_val = (back_it - circular_buffer) + ( (circular_buffer + max_element_count ) - front_it );
-            ret_val = back_it - front_it + max_element_count;
-        }
-        else if (back_it > front_it )
-        {
-            ret_val = back_it - front_it;
-        }
-
-        return ret_val;
+        return current_element_count;
     }
 
     bool empty() const
@@ -85,16 +80,27 @@ public:
         return max_element_count;
     }
 
+    iterator begin() const
+    {
+        return circular_buffer;
+    }
+
+    iterator end() const
+    {
+        return circular_buffer+max_element_count;
+    }
+
 private:
 
     Element_t* circular_buffer;
 
-    Element_t* front_it;
-    Element_t* back_it;
+    iterator front_it;
+    iterator back_it;
 
     size_t max_element_count;
+    size_t current_element_count;
 
-    void forwardIterator( Element_t*& it ) 
+    void forwardIterator( iterator& it ) 
     {
         it++;
 
