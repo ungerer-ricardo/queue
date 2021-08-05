@@ -13,6 +13,7 @@
 
 #include "blocking_queue.hpp"
 #include "circular_buffer_queue.hpp"
+#include "std_queue_adaptor.hpp"
 
 logger::ConsoleLogger global_logger;
 
