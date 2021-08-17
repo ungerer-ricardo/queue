@@ -92,12 +92,13 @@ public:
 
 private:
 
+    //TODO: Change this to use std::array
     Element_t* circular_buffer;
 
     iterator front_it;
     iterator back_it;
 
-    size_t max_element_count;
+    const size_t max_element_count;
     size_t current_element_count;
 
     void forwardIterator( iterator& it ) 
