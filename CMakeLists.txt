@@ -3,7 +3,7 @@ project(bosh_queue)
 
 FIND_PACKAGE( Boost 1.76.0 COMPONENTS program_options REQUIRED )
 
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 
 include_directories(queue cpp11logger)
 

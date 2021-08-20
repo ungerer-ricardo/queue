@@ -1,5 +1,4 @@
-#ifndef CIRCULAR_BUFFER_QUEUE_H_
-#define CIRCULAR_BUFFER_QUEUE_H_
+#pragma once
 
 #include <iostream>
 #include <cstdlib>
@@ -113,4 +112,3 @@ private:
 
 };
 
-#endif

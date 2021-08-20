@@ -4,9 +4,7 @@
 //
 //  Created by Ricardo Ungerer on 30/07/2021.
 //
-
-#ifndef queue_hpp
-#define queue_hpp
+#pragma once
 
 #include <queue>
 #include <mutex>
@@ -29,23 +27,23 @@ class BlockingQueue
 {
 public:
     
-    typedef enum {
-        ST_RUNNING,
-        ST_CLOSING
-    } QueueState;
+    enum class QueueState {
+        RUNNING,
+        CLOSING
+    };
 
     BlockingQueue ( const size_t& max_queue_size, 
                     const unsigned& timeout_in_milli = std::numeric_limits<unsigned>::max() ) :
         queue(max_queue_size),
         timeout_in_milli( timeout_in_milli ),
-        my_state(ST_RUNNING)
+        my_state(QueueState::RUNNING)
     {}
     
     virtual ~BlockingQueue()
     {
         std::unique_lock<Mutex_t> lock( queue_mutex );
 
-        my_state = ST_CLOSING;
+        my_state = QueueState::CLOSING;
 
         push_condition.notify_all();
         pop_condition.notify_all();
@@ -53,7 +51,7 @@ public:
     
     bool push (const Element_t& element )
     {
-        if ( my_state != ST_RUNNING ) 
+        if ( my_state != QueueState::RUNNING )
         {
             return false;
         }
@@ -70,7 +68,7 @@ public:
         }
 
         //Rechecking as the queue could have been closed while waiting
-        if (my_state!=ST_RUNNING) 
+        if (my_state!=QueueState::RUNNING)
         {
             global_logger() << "trying to push on a closed queue";
             return false;
@@ -83,7 +81,7 @@ public:
     
     bool pop( Element_t& popped_val )
     {
-        if( my_state != ST_RUNNING )
+        if( my_state != QueueState::RUNNING )
         {
             return false;
         }
@@ -99,7 +97,7 @@ public:
             }
         }
 
-        if (my_state!=ST_RUNNING)
+        if (my_state!=QueueState::RUNNING)
         {
             return false;
         }
@@ -135,5 +133,3 @@ private:
     CondVar_t push_condition;
     CondVar_t pop_condition;
 };
-
-#endif /* queue_hpp */
