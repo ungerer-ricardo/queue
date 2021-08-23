@@ -10,6 +10,7 @@
 #include <mutex>
 #include <chrono>
 #include <limits>
+#include <condition_variable>
 
 #include <logger.h>
 

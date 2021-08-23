@@ -1,3 +1,3 @@
 [submodule "cpp11logger"]
 	path = cpp11logger
-	url = git@github.com:FutaAlice/cpp11logger.git
+	url = https://github.com/FutaAlice/cpp11logger.git
