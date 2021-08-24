@@ -114,3 +114,66 @@ TEST(CircularBufferQueueTest, NoSizedQueue)
     EXPECT_FALSE( q.pop(el));
 }
 
+TEST(CircularBufferQueueTest, CopyCtor)
+{
+    CircularBufferQueue<int> q(3);
+    q.push(1);
+    q.push(2);
+    q.push(3);
+
+    CircularBufferQueue<int> q2 { q };
+    int el {0};
+
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 1 );
+            
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 2 );
+    
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 3 );
+    EXPECT_TRUE( q2.empty() );
+
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 1 );
+            
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 2 );
+    
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 3 );
+    EXPECT_TRUE( q.empty() );
+}
+
+TEST(CircularBufferQueueTest, AssignmentOperator)
+{
+    CircularBufferQueue<int> q(3);
+    q.push(1);
+    q.push(2);
+    q.push(3);
+
+    CircularBufferQueue<int> q2(3);
+    q2 = q;
+
+    int el;
+    
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 1 );
+            
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 2 );
+    
+    EXPECT_TRUE( q2.pop(el) );
+    EXPECT_EQ( el, 3 );
+    EXPECT_TRUE( q2.empty() );
+
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 1 );
+            
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 2 );
+    
+    EXPECT_TRUE( q.pop(el) );
+    EXPECT_EQ( el, 3 );
+    EXPECT_TRUE( q.empty() );
+}
