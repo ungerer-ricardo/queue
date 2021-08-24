@@ -12,11 +12,7 @@
 #include <limits>
 #include <condition_variable>
 
-#include <logger.h>
-
 #include "circular_buffer_queue.hpp"
-
-extern logger::ConsoleLogger global_logger;
 
 typedef std::chrono::milliseconds millisecs;
 
@@ -63,7 +59,6 @@ public:
         {
             if (push_condition.wait_for(lock, millisecs( timeout_in_milli ) ) == std::cv_status::timeout)
             {
-                global_logger() << "push timeout on element " << element;
                 return false;
             }
         }
@@ -71,7 +66,6 @@ public:
         //Rechecking as the queue could have been closed while waiting
         if (my_state!=QueueState::RUNNING)
         {
-            global_logger() << "trying to push on a closed queue";
             return false;
         }
 
@@ -93,8 +87,7 @@ public:
         {
             if ( pop_condition.wait_for( lock, millisecs( timeout_in_milli) ) == std::cv_status::timeout )
             {
-                global_logger() << "pop timeout.";
-                return false;
+               return false;
             }
         }
 

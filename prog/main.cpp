@@ -114,8 +114,8 @@ int main(int argc, const char * argv[]) {
         return inputs.error;
     }
 
-    unsigned elements_per_producer = inputs.total / inputs.producers;
-    unsigned elements_per_consumer = inputs.total / inputs.consumers;
+    unsigned elements_per_producer {inputs.total / inputs.producers};
+    unsigned elements_per_consumer {inputs.total / inputs.consumers};
 
     BlockingQueue<int> q(inputs.queue_size, inputs.timeout) ;
 

@@ -3,10 +3,6 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <logger.h>
-
-extern  logger::ConsoleLogger global_logger;
-
 template<class Element_t>
 class CircularBufferQueue
 {
@@ -25,7 +21,6 @@ public:
 
     virtual ~CircularBufferQueue() 
     {
-        global_logger() << "Destroying CircularBufferQueue";
         delete[] circular_buffer;
     }
 
@@ -33,7 +28,6 @@ public:
     {
         if (size() >= max_element_count)
         {
-            global_logger() << "pushing on a full list." << new_element;
             return false;
         }   
 
@@ -48,7 +42,6 @@ public:
     {
         if(empty())
         {
-            global_logger() << "popping an empty list";
             return false;
         }
         
